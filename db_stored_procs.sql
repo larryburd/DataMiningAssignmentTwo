@@ -9,7 +9,7 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
     INSERT INTO Fact_Sales(custID, transDate, prodID, locID, quantity, pricePerUnit, totalSpent)
-    VALUES (cust_id, trans_date, prod_id, loc_id, num_items, unit_price, total_spent)
+    VALUES (cust_id, trans_date, prod_id, loc_id, num_items, unit_price, total_spent);
 END;
 $$;
 
@@ -18,16 +18,16 @@ LANGUAGE plpgsql
 AS $$
 BEGIN 
     INSERT INTO Dim_Customers
-    VALUES(cust_id)
+    VALUES(cust_id);
 END;
 $$;
 
-CREATE OR REPLACE PROCEDURE insert_dim_Date(trans_date DATE, is_weekend BOOLEAN, month_name VARCHAR, sales_quarter INT, fy INT)
+CREATE OR REPLACE PROCEDURE insert_dim_date(trans_date DATE, is_weekend BOOLEAN, month_name VARCHAR, sales_quarter INT, fy INT)
 LANGUAGE plpgsql
 AS $$
 BEGIN 
     INSERT INTO Dim_Dates
-    VALUES(trans_date, is_weekend, month_name, sales_quarter, fy)
+    VALUES(trans_date, is_weekend, month_name, sales_quarter, fy);
 END;
 $$;
 
@@ -35,8 +35,8 @@ CREATE OR REPLACE PROCEDURE insert_dim_products(cat VARCHAR, prod_name VARCHAR)
 LANGUAGE plpgsql
 AS $$
 BEGIN 
-    INSERT INTO Dim_Products(category, name)
-    VALUES(cat, prod_name)
+    INSERT INTO Dim_Products(category, prodname)
+    VALUES(cat, prod_name);
 END;
 $$;
 
@@ -45,6 +45,6 @@ LANGUAGE plpgsql
 AS $$
 BEGIN 
     INSERT INTO Dim_Locations(name)
-    VALUES(loc_name)
+    VALUES(loc_name);
 END;
 $$;

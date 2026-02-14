@@ -1,7 +1,7 @@
 CREATE TABLE Dim_Products (
     id SERIAL NOT NULL PRIMARY KEY,
-    prodName VARCHAR(30),
-    category VARCHAR(30)
+    prodName VARCHAR(75),
+    category VARCHAR(75)
 );
 
 CREATE TABLE Dim_Customers (

@@ -11,6 +11,7 @@
 import pandas as pd
 import numpy as np
 import psycopg2
+from datetime import date
 
 # REGION DATA CLEANING
 # read in the data from the csv file
@@ -122,6 +123,7 @@ df['Is Weekend'] = df['Transaction Date'].apply(is_weekend)
 cust_ids = df['Customer ID'].unique()
 # Get unique transaction dates and the calculated values
 dates = df[['Transaction Date', 'Month Name', 'FY', 'fiscal_quarter', 'Is Weekend']].drop_duplicates()
+dates['Transaction Date'] = dates['Transaction Date'].dt.strftime('%d-%m-%Y') # type: ignore
 # Get unique products tuples
 products = df[['Item', 'Category']].drop_duplicates()
 # Get unique location
@@ -139,5 +141,29 @@ conn = psycopg2.connect(
 cur = conn.cursor()
 
 # populate Dim_Customers table
+# psycopg2 requires data values to be in tuple form
+cust_strs = [(cust_id, ) for cust_id in cust_ids]
+sql = "CALL insert_dim_customer(%s)"
+cur.executemany(sql, cust_strs)
+
+# populate Dim_Dates table
+sql = "CALL insert_dim_date(%s, %s, %s, %s, %s)"
+date_strs = [(date(int(dt[-4:]), int(dt[3:5]), int(dt[:2])), bool(is_weekend), str(month), int(quarter), int(fy)) for dt, month, fy, quarter, is_weekend in dates.values]
+cur.executemany(sql, date_strs)
+
+#populate dim_products table
+sql = "CALL insert_dim_products(%s, %s)"
+prod_strs = [(item, category) for category, item in products.values]
+cur.executemany(sql, prod_strs)
+
+# populate locations table
+sql = "CALL insert_dim_locations(%s)"
+loc_strs = [(loc, ) for loc in locations]
+cur.executemany(sql, loc_strs)
+
+# Populate fact_sales table
 
 
+conn.commit()
+cur.close()
+conn.close()
