@@ -1,0 +1,40 @@
+erDiagram
+
+    Fact_Sales ||--o{ Dim_Customers : "custID"
+    Fact_Sales ||--o{ Dim_Dates: "transDate"
+    Fact_Sales ||--o{ Dim_Products: "prodID"
+    Fact_Sales ||--o{ Dim_Locations: "locID"
+
+    Fact_Sales {
+        int id PK
+        string custID FK "References Dim_Customers"
+        date transDate FK "References Dim_Date"
+        int prodID FK "References Dim_Products"
+        int locID FK "References Dim_Location"
+        int quantity
+        float price_per_unit
+        float total_spent
+    }
+
+    Dim_Customers {
+        string id PK
+    }
+
+    Dim_Products {
+        int id PK
+        string category
+        string name
+    }
+
+    Dim_Dates {
+        date transactionDate PK
+        bool isWeekend
+        string monthName
+        int quarter
+        int fiscalYear
+    }
+
+    Dim_Locations {
+        int id PK
+        string name
+    }
