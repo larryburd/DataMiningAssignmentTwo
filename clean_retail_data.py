@@ -3,31 +3,129 @@
 # Class: Data Mining
 # Date: 20260210
 #
-# Purpose: to clean data from the retail_store_sale.csv dataset
+# Purpose: to clean data from the retail_store_sale.csv dataset and insert
+# the cleaned values into the database
 #############################################################################
 
+# REGION IMPORTS
 import pandas as pd
+import numpy as np
 import psycopg2
 
+# REGION DATA CLEANING
 # read in the data from the csv file
 df = pd.read_csv('./retail_store_sales.csv')
 
-# MISSING VALUES STEP
+# Remove duplicates
+df = df.drop_duplicates(subset=['Transaction ID'])
+
+# Replace all missing discount applied values as 0 (no discount)
+df['Discount Applied'] = df['Discount Applied'].fillna('False');
+
 # Find and drop all records that have more than two nulls
-df = df[df.isnull().sum(axis=1) < 2]
+df = df[df.isnull().sum(axis=1) < 3]
 
-# VALIDATION STEP
-# Ensure that <Price Per Unit> x <Quantity> = <Total Spent>
-df['total_is_correct'] = df['Price Per Unit'] * df['Quantity'] == df['Total Spent']
+# Convert data types 
+df['Price Per Unit'] = pd.to_numeric(df['Price Per Unit'], errors='coerce')
+df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')
+df['Total Spent'] = pd.to_numeric(df['Total Spent'], errors='coerce')
+df['Discount Applied'].convert_dtypes(convert_boolean=True)
+df['Transaction Date'] = pd.to_datetime(df['Transaction Date'])
 
-# Check if validation is correct
-if len(df) != df['total_is_correct'].sum():
-    print("Error validating <Price Per Unit> x <Quantity> = <Total Spent>")
-    exit()
+# Set any strings to lower case.
+df['Transaction ID'] = df['Transaction ID'].str.lower().str.strip()
+df['Customer ID'] = df['Customer ID'].str.lower().str.strip()
+df['Category'] = df['Category'].str.lower().str.strip()
+df['Item'] = df['Item'].str.lower().str.strip()
+df['Payment Method'] = df['Payment Method'].str.lower().str.strip()
+df['Location'] = df['Location'].str.lower().str.strip()
 
-# STANDARDIZATION
-# Set any strings to lower case. keep any non-strings as the current value
-df = df.apply(lambda x: x.lower() if isinstance(x, str) else x)
+# Validation of total and item columns
+# Record whether <Price Per Unit> x <Quantity> = <Total Spent>
+df['Total Is Correct'] = df['Price Per Unit'] * df['Quantity'] == df['Total Spent']
+
+# Check if any invalid records exist
+if len(df[df['Total Is Correct'] == False]) > 0:
+    # Fix the records by determining price per unit by Total Spent/Quantity
+    df['Price Per Unit'] = df.apply(
+        lambda row: row['Total Spent'] / row['Quantity'] 
+        if not row['Total Is Correct'] 
+        else row['Price Per Unit'],
+        axis=1
+    )
+
+# Fix missing Item entries by placing the item type that has the same category and price
+no_empty_items = df.dropna()
+
+def fill_item_col(row):
+    # No change if item exists
+    if pd.notna(row['Item']):
+        return row['Item']
+    
+    # Attempt to match the price per unit and category to another item
+    match = no_empty_items[(no_empty_items['Price Per Unit'] == row['Price Per Unit']) & (no_empty_items['Category'] == row['Category'])]
+
+    # Return the item name if there is a match, else return not a number
+    if not match.empty:
+        return match.iloc[0]['Item']
+    else:
+        return np.nan
+
+df['Item'] = df.apply(fill_item_col, axis=1)
+
+# Calculated fields
+# Get month name
+df['Month Name'] = df['Transaction Date'].dt.month_name() # type: ignore
+
+# Get FY
+def get_fy(tran_date):
+    full_year = tran_date.year
+    month = tran_date.month
+
+    # Add one to the year if we are in october or later
+    if month > 10:
+        full_year += 1
+
+    return str(full_year)[-2:] # Returns the last two number of the year
+    
+df['FY'] = df['Transaction Date'].apply(get_fy)
+
+# Get quarter
+def get_quarter(tran_date):
+    month = tran_date.month
+    if month <= 3:
+        return 1
+    elif 3 < month <= 6:
+        return 2
+    elif 6 < month <= 9:
+        return 3
+    elif 9 < month <= 12:
+        return 4
+    else:
+        return np.nan
+    
+df['fiscal_quarter'] = df['Transaction Date'].apply(get_quarter)
+
+# Determine if date is on a weekend
+def is_weekend(tran_date):
+    day_name = tran_date.day_name()
+
+    if day_name in ['Saturday', 'Sunday']:
+        return True
+    else:
+        return False
+
+df['Is Weekend'] = df['Transaction Date'].apply(is_weekend)
+
+# REGION DATABASE
+# Get unique customer IDs
+cust_ids = df['Customer ID'].unique()
+# Get unique transaction dates and the calculated values
+dates = df[['Transaction Date', 'Month Name', 'FY', 'fiscal_quarter', 'Is Weekend']].drop_duplicates()
+# Get unique products tuples
+products = df[['Item', 'Category']].drop_duplicates()
+# Get unique location
+locations = df['Location'].unique()
 
 # Connect to the dataase
 conn = psycopg2.connect(
@@ -39,3 +137,7 @@ conn = psycopg2.connect(
 )
 
 cur = conn.cursor()
+
+# populate Dim_Customers table
+
+
