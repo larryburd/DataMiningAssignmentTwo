@@ -1,0 +1,107 @@
+Top Pairings
+____________________________________________________________
+  [(('item_11_pat', 'item_19_milk'), 3), (('item_19_pat', 'item_22_but'), 3), (('item_22_cea', 'item_2_bev'), 3)]
+############################################################
+
+Item Count by Month
+____________________________________________________________
+     month_name                                              items most_purchased_item
+0       April  [[item_12_but, item_15_ehe, item_3_milk, item_...         item_12_but
+1      August  [[item_12_fur, item_11_fur, item_24_bev, item_...         item_12_fur
+2    December  [[item_9_bev, item_25_ehe, item_7_food, item_2...          item_9_bev
+3    February  [[item_1_fur, item_3_milk, item_4_food, item_1...          item_1_fur
+4     January  [[item_6_milk, item_20_but, item_6_cea, item_2...          item_6_cea
+5        July  [[item_24_but, item_2_ehe, item_16_pat, item_1...          item_2_ehe
+6        June  [[item_12_bev, item_6_ehe, item_21_but, item_3...         item_3_milk
+7       March  [[item_11_pat, item_6_fur, item_20_but, item_1...         item_11_pat
+8         May  [[item_12_bev, item_8_but, item_25_ehe, item_2...         item_12_bev
+9    November  [[item_17_bev, item_22_pat, item_14_food, item...         item_17_bev
+10    October  [[item_2_cea, item_15_pat, item_24_pat, item_1...          item_2_cea
+11  September  [[item_15_fur, item_6_fur, item_11_cea, item_2...         item_15_fur
+############################################################
+
+Products by Locations and Quarter
+____________________________________________________________
+  loc_name  qtr
+in-store  1      1452
+          2      1298
+          3      1292
+          4      1265
+online    1      1416
+          2      1339
+          3      1403
+          4      1296
+Name: items, dtype: int64
+############################################################
+
+Sales by Month
+____________________________________________________________
+  month_name
+April        125618.5
+August       123287.5
+December     129688.5
+February     119685.0
+January      174421.0
+July         131509.0
+June         129771.0
+March        122392.0
+May          124594.5
+November     122346.5
+October      119413.5
+September    129344.0
+Name: total_sales, dtype: float64
+############################################################
+
+Sales by Fiscal Year
+____________________________________________________________
+  fy
+22    430872.0
+23    490734.5
+24    512373.5
+25    118091.0
+Name: total_sales, dtype: float64
+############################################################
+
+Sales by Customer and Month
+____________________________________________________________
+  month_name  cust_id
+April       cust_01    35
+            cust_02    39
+            cust_03    36
+            cust_04    25
+            cust_05    34
+                       ..
+September   cust_21    35
+            cust_22    34
+            cust_23    41
+            cust_24    29
+            cust_25    39
+Name: items, Length: 300, dtype: int64
+############################################################
+
+Sales by Quarter
+____________________________________________________________
+  qtr
+1    289
+2    273
+3    276
+4    276
+Name: items, dtype: int64
+############################################################
+
+Top Customers
+____________________________________________________________
+           total_sales  num_trans
+cust_id                        
+cust_24      68452.0        466
+cust_08      67351.5        459
+cust_05      66974.5        458
+cust_16      65570.5        444
+cust_13      65037.0        452
+cust_23      64507.0        437
+cust_10      63155.5        441
+cust_15      63117.5        458
+cust_21      62933.0        419
+cust_02      62046.5        422
+############################################################
+

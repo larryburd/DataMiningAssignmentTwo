@@ -50,7 +50,7 @@ END;
 $$;
 
 -- Retrieval Functions
-CREATE OR REPLACE FUNCTION select_by_cust_transaction()
+CREATE OR REPLACE FUNCTION transactions_by_cust()
 RETURNS TABLE(
     cust_id VARCHAR,
     trans_date DATE,
@@ -59,6 +59,8 @@ RETURNS TABLE(
     fy INT,
     is_weekend BOOLEAN,
     loc_name VARCHAR,
+	items VARCHAR[],
+	item_cats VARCHAR[],
     total_quantity BIGINT,
     total_sales NUMERIC
 )
@@ -75,14 +77,49 @@ BEGIN
         dd.fiscalyear::INT,
         dd.isweekend::BOOLEAN,
         dl.name::VARCHAR,
+		ARRAY_AGG(dp.prodname)::VARCHAR[],
+		ARRAY_AGG(dp.category)::VARCHAR[],
         SUM(fs.quantity)::BIGINT,
         SUM(fs.totalspent)::NUMERIC
     FROM fact_sales fs
     LEFT JOIN dim_locations dl ON fs.locid = dl.id
     LEFT JOIN dim_dates dd ON fs.transdate = dd.transdate
+	LEFT JOIN dim_products dp ON fs.prodid = dp.id
     GROUP BY
         fs.custid, fs.transdate, dl.name, dd.transmonth, dd.quarter, dd.fiscalyear, dd.isweekend
     ORDER BY 
         fs.custid, fs.transdate, dl.name;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION products_bought_by_date()
+RETURNS TABLE(
+    trans_date DATE,
+	month_name VARCHAR,
+    fy INT,
+    qtr INT,
+    is_weekend BOOLEAN,
+    items VARCHAR[],
+    item_cats VARCHAR[]
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        fs.transdate::DATE,
+		dd.transmonth::VARCHAR,
+        dd.fiscalyear::INT,
+        dd.quarter::INT,
+		dd.isweekend::BOOLEAN,
+        ARRAY_AGG(dp.prodname)::VARCHAR[],
+        ARRAY_AGG(dp.category)::VARCHAR[]
+    FROM fact_sales fs
+    LEFT JOIN dim_dates dd ON fs.transdate = dd.transdate
+    LEFT JOIN dim_products dp ON fs.prodid = dp.id
+    GROUP BY
+        fs.transdate, dd.transmonth, dd.fiscalyear, dd.quarter, dd.isweekend
+    ORDER BY
+        fs.transdate, dd.transmonth, dd.fiscalyear, dd.quarter;
 END;
 $$;
