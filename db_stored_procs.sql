@@ -1,8 +1,8 @@
 -- SQL stored procedures to insert and select
 -- data from the store sales database
 
--- Insert a new sales record
--- The logic whether to build new records in the dimension tables is done in the build_db.py file
+-- Insert Stored Procs
+-- The logic whether to build new records in the dimension tables is done in the clean_and_warehouse_retail_data.py file
 
 CREATE OR REPLACE PROCEDURE insert_fact_sale(cust_id VARCHAR, trans_date DATE, prod_id INT, loc_id INT, num_items INT, unit_price DECIMAL, total_spent DECIMAL)
 LANGUAGE plpgsql
@@ -46,5 +46,43 @@ AS $$
 BEGIN 
     INSERT INTO Dim_Locations(name)
     VALUES(loc_name);
+END;
+$$;
+
+-- Retrieval Functions
+CREATE OR REPLACE FUNCTION select_by_cust_transaction()
+RETURNS TABLE(
+    cust_id VARCHAR,
+    trans_date DATE,
+    month_name VARCHAR,
+    qtr INT,
+    fy INT,
+    is_weekend BOOLEAN,
+    loc_name VARCHAR,
+    total_quantity BIGINT,
+    total_sales NUMERIC
+)
+LANGUAGE plpgsql
+STABLE
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        fs.custid::VARCHAR,
+        fs.transdate::DATE,
+        dd.transmonth::VARCHAR,
+        dd.quarter::INT,
+        dd.fiscalyear::INT,
+        dd.isweekend::BOOLEAN,
+        dl.name::VARCHAR,
+        SUM(fs.quantity)::BIGINT,
+        SUM(fs.totalspent)::NUMERIC
+    FROM fact_sales fs
+    LEFT JOIN dim_locations dl ON fs.locid = dl.id
+    LEFT JOIN dim_dates dd ON fs.transdate = dd.transdate
+    GROUP BY
+        fs.custid, fs.transdate, dl.name, dd.transmonth, dd.quarter, dd.fiscalyear, dd.isweekend
+    ORDER BY 
+        fs.custid, fs.transdate, dl.name;
 END;
 $$;

@@ -7,13 +7,13 @@
 # the cleaned values into the database
 #############################################################################
 
-# REGION IMPORTS
+# REGION: IMPORTS
 import pandas as pd
 import numpy as np
 import psycopg2
 from datetime import date
 
-# REGION DATA CLEANING
+# REGION: DATA CLEANING
 # read in the data from the csv file
 df = pd.read_csv('./retail_store_sales.csv')
 
@@ -40,6 +40,7 @@ df['Category'] = df['Category'].str.lower().str.strip()
 df['Item'] = df['Item'].str.lower().str.strip()
 df['Payment Method'] = df['Payment Method'].str.lower().str.strip()
 df['Location'] = df['Location'].str.lower().str.strip()
+
 
 # Validation of total and item columns
 # Record whether <Price Per Unit> x <Quantity> = <Total Spent>
@@ -118,7 +119,7 @@ def is_weekend(tran_date):
 
 df['Is Weekend'] = df['Transaction Date'].apply(is_weekend)
 
-# REGION DATABASE
+# REGION: DATABASE
 # Get unique customer IDs
 cust_ids = df['Customer ID'].unique()
 # Get unique transaction dates and the calculated values
@@ -162,8 +163,53 @@ loc_strs = [(loc, ) for loc in locations]
 cur.executemany(sql, loc_strs)
 
 # Populate fact_sales table
+# Transform date
+dates= df['Transaction Date'].dt.strftime('%d-%m-%Y') # type: ignore
+df['Date'] = [date(int(dt[-4:]), int(dt[3:5]), int(dt[:2])) for dt in dates]
 
+# Next retrieve the data from the database so that we have the IDs we want to use
+# in the foreign key rows
+# cur.execute("SELECT transactionDate FROM dim_dates")
+# dates = cur.fetchall()
 
+cur.execute("SELECT * FROM dim_products")
+products = cur.fetchall()
+
+cur.execute('SELECT * FROM dim_locations')
+locations = cur.fetchall()
+
+# Add foriegn key information to the dataframe
+product_lookup = {p[1]: p[0] for p in products}
+df['Prod ID'] = df['Item'].map(product_lookup)
+print(df['Prod ID'].info())
+
+loc_lookup = {l[1]: l[0] for l in locations}
+df['Loc ID'] =df['Location'].map(loc_lookup)
+print(df['Loc ID'].info())
+
+print(df.info())
+
+# Create value tuples and execute sale insert stored procedure
+# sales_tuple = list(
+#     df[['Customer ID', 'Date', 'Prod ID', 'Loc ID', 'Quantity', 'Price Per Unit', 'Total Spent']]
+#     .itertuples(index=False, name=None)
+# )
+sales_tuple = [
+    (
+        str(r[1]),
+        r[16],
+        str(r[17]), 
+        str(r[18]), 
+        int(r[5]), 
+        r[4],
+        r[6]
+    ) 
+    for r in list(df.itertuples(index=False, name=None))
+]
+sql = "CALL insert_fact_sale(%s, %s, %s, %s, %s, %s, %s)"
+cur.executemany(sql, sales_tuple)
+
+# Commit and close connections
 conn.commit()
 cur.close()
 conn.close()
