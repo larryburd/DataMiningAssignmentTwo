@@ -1,4 +1,0 @@
-To start postgresql@14 now and restart at login:
-  brew services start postgresql@14
-Or, if you don't want/need a background service you can just run:
-  /opt/homebrew/opt/postgresql@14/bin/postgres -D /opt/homebrew/var/postgresql@14

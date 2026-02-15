@@ -1,5 +1,0 @@
-df = pd.DataFrame({
-    'month_name': ['April', 'August'],        
-    'items': [[item_12_but, item_15_ehe, item_3_milk, item_12_but],
-             [item_12_fur, item_11_fur, item_24_bev, item_11_fur]]
-})

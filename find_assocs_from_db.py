@@ -14,7 +14,8 @@ from itertools import combinations
 from collections import Counter
 
 # REGION: FUNCTIONS
-def print_df_info(title, df):
+# Print out various stats about a dataframe
+def print_df_info(df, title='Dataframe'):
     print(f"\n{title}")
     print(f"\nShape: {df.shape}")
     print(f"Coumns: {df.columns.to_list()}")
@@ -25,6 +26,7 @@ def print_df_info(title, df):
     print("\nBasic Statistics:")
     print(df.describe())
 
+# Returns the top pairings of purchased items
 def get_top_pairs(pair_counts):
     top_pairs = []
     for pair, count in pair_counts.most_common():
@@ -32,6 +34,7 @@ def get_top_pairs(pair_counts):
             top_pairs.append((pair, count))
     return top_pairs
 
+# Returns the most common item purchased for a list of items
 def get_most_purchased(items):
     counter = Counter(items)
     most_common = counter.most_common(1)
@@ -39,6 +42,7 @@ def get_most_purchased(items):
         return most_common[0][0]
     return None
 
+# Write output file
 def write_out(titles, frames):
     ofile = open('./associations_output.txt', 'w')
     for i in range(len(titles)):
@@ -63,8 +67,8 @@ sales_by_cust = pd.read_sql_query('SELECT * FROM transactions_by_cust()', conn)
 items_by_date = pd.read_sql_query('SELECT * FROM products_bought_by_date()', conn)
 conn.close()
 
-#print_df_info("Sales by customer dataframe information:", sales_by_cust)
-#print_df_info("Items by date dataframe information:", items_by_date)
+#print_df_info(sales_by_cust, "Sales by customer dataframe information:")
+#print_df_info(items_by_date, "Items by date dataframe information:")
 
 
 # REGION: PERFORM ASSOCIATIVE ANALYSIS
@@ -79,11 +83,13 @@ pair_counts = Counter(all_pairs)
 top_pairs = get_top_pairs(pair_counts)
 
 # Products purchased by month
+# First group the items purchased by month
 items_sold_per_month = items_by_date.groupby('month_name')['items'].apply(list).reset_index()
-items_sold_per_month.columns = ['month_name', 'items']
+
+# Then find the most commonly purchased item for each month
 items_sold_per_month['most_purchased_item'] = items_sold_per_month['items'].apply(lambda items: get_most_purchased(items[0]))
 
-# Products by location
+# Number of products sold by location and quarter
 prods_by_loc_and_qtr = sales_by_cust.groupby(['loc_name', 'qtr'])['items'].count()
 
 # sales income by month
@@ -113,7 +119,6 @@ titles = ['Top Pairings', 'Item Count by Month', 'Products by Locations and Quar
 
 frames = [
     top_pairs, 
-    #item_count_by_month, 
     items_sold_per_month,
     prods_by_loc_and_qtr, 
     sales_by_month, 
@@ -123,4 +128,5 @@ frames = [
     top_custs
 ]
 
+# Save the findings to an output file
 write_out(titles, frames)
