@@ -34,21 +34,46 @@ online    1      1416
 Name: items, dtype: int64
 ############################################################
 
-Sales by Month
+Sales by FY and Month
 ____________________________________________________________
-  month_name
-April        125618.5
-August       123287.5
-December     129688.5
-February     119685.0
-January      174421.0
-July         131509.0
-June         129771.0
-March        122392.0
-May          124594.5
-November     122346.5
-October      119413.5
-September    129344.0
+  fy  month_name
+22  April         40442.0
+    August        41333.5
+    February      43325.5
+    January       52911.5
+    July          44471.5
+    June          42576.0
+    March         40996.0
+    May           40347.5
+    October       38355.0
+    September     46113.5
+23  April         38905.5
+    August        38592.0
+    December      38201.0
+    February      39214.5
+    January       48052.5
+    July          45632.5
+    June          42474.0
+    March         38534.5
+    May           40480.5
+    November      41256.5
+    October       38322.0
+    September     41069.0
+24  April         46271.0
+    August        43362.0
+    December      43021.0
+    February      37145.0
+    January       47908.5
+    July          41405.0
+    June          44721.0
+    March         42861.5
+    May           43766.5
+    November      37014.0
+    October       42736.5
+    September     42161.5
+25  December      48466.5
+    January       25548.5
+    November      44076.0
 Name: total_sales, dtype: float64
 ############################################################
 
